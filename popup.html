@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      width: 340px;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-size: 14px;
+      color: #e7e9ea;
+      background: #0f1419;
+    }
+
+    /* ---------- 头部 ---------- */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 16px 14px;
+      background: linear-gradient(135deg, #1d9bf0 0%, #1a6fc8 100%);
+    }
+    .header img { width: 30px; height: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+    .header .title { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.2px; }
+    .header .subtitle { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 1px; }
+
+    .body { padding: 14px 16px 12px; }
+
+    /* ---------- 按钮 ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: filter 0.15s ease, background-color 0.15s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      width: 100%;
+      padding: 10px 16px;
+      background: #1d9bf0;
+      color: #fff;
+    }
+    .btn-add {
+      padding: 0 16px;
+      height: 38px;
+      background: #eff3f4;
+      color: #0f1419;
+      flex: none;
+    }
+
+    /* ---------- 输入行 ---------- */
+    .input-row { display: flex; gap: 8px; margin-top: 10px; }
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      height: 38px;
+      padding: 0 14px;
+      border: 1px solid #38444d;
+      border-radius: 9999px;
+      background: transparent;
+      color: #e7e9ea;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input[type="text"]::placeholder { color: #71767b; }
+    input[type="text"]:focus {
+      border-color: #1d9bf0;
+      box-shadow: 0 0 0 1px #1d9bf0;
+    }
+
+    /* ---------- 分组标题 ---------- */
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 16px 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #71767b;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .count-badge {
+      background: #1d9bf0;
+      color: #fff;
+      font-size: 11px;
+      border-radius: 9999px;
+      padding: 1px 8px;
+      letter-spacing: 0;
+    }
+
+    /* ---------- 列表 ---------- */
+    #lists {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid #2f3336;
+      border-radius: 16px;
+      overflow-x: hidden;
+    }
+    #lists::-webkit-scrollbar { width: 6px; }
+    #lists::-webkit-scrollbar-thumb { background: #38444d; border-radius: 3px; }
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border-bottom: 1px solid #2f3336;
+      transition: background-color 0.12s ease;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item:hover { background: rgba(239, 243, 244, 0.04); }
+    .list-icon {
+      flex: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: rgba(29, 155, 240, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1d9bf0;
+    }
+    .list-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .list-id { display: block; font-weight: 400; font-size: 11px; color: #71767b; margin-top: 1px; }
+    .del {
+      flex: none;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 9999px;
+      background: transparent;
+      color: #71767b;
+      cursor: pointer;
+      font-size: 15px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.12s ease, color 0.12s ease;
+    }
+    .del:hover { background: rgba(244, 33, 46, 0.12); color: #f4212e; }
+    .empty {
+      padding: 26px 16px;
+      text-align: center;
+      color: #71767b;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .empty svg { display: block; margin: 0 auto 8px; opacity: 0.5; }
+
+    /* ---------- 状态与提示 ---------- */
+    #status { font-size: 12px; min-height: 16px; margin-top: 10px; color: #00ba7c; }
+    #status.err { color: #f4212e; }
+    .hint {
+      margin-top: 6px;
+      padding-top: 10px;
+      border-top: 1px solid #2f3336;
+      color: #71767b;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+    .hint b { color: #9ba8b0; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icon48.png" alt="" />
+    <div>
+      <div class="title">X List Adder</div>
+      <div class="subtitle">资料卡片一键加 List</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <button id="fetch" class="btn btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+      从 X 同步我的 Lists
+    </button>
+
+    <div class="input-row">
+      <input id="input" type="text" placeholder="粘贴 List 链接或 ID…" />
+      <button id="add" class="btn btn-add">添加</button>
+    </div>
+
+    <div class="section-title">
+      <span>我的 Lists</span>
+      <span class="count-badge" id="count" style="display:none"></span>
+    </div>
+    <div id="lists"></div>
+    <div id="status"></div>
+
+
+    <div class="hint">
+      <b>用法</b>：悬停任意 X 用户资料卡片 → 点「+ List」即可加入。<br />
+      <b>快速入口</b>：X 左侧导航栏顶部的「我的 Lists」可直接打开各分组。<br />
+      <b>失败时</b>：先在 X 网页端手动加一次任意 List，插件会自动学习当前接口。
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
