@@ -1,10 +1,9 @@
 // 运行在隔离世界 (isolated world)
 // 职责：
 // 1. 监听 X 页面 DOM，检测资料卡片 (data-testid="HoverCard") 出现
-// 2. 从卡片解析 @handle，注入「+ List」按钮
+// 2. 从卡片解析 @handle 和用户 ID，注入「+ List」按钮
 // 3. 点击按钮弹出 Lists 选择菜单，通过消息让 background 调用 X API 完成加入
 (() => {
-  const OPS_KEY = '__xla_ops__';
   const BTN_CLASS = 'xla-btn';
   let panel = null;          // 菜单单例
   let panelOwnerBtn = null;  // 当前菜单归属的按钮
@@ -17,16 +16,6 @@
     if (chrome.runtime.lastError) resolve({ error: chrome.runtime.lastError.message });
     else resolve(r || { error: 'no response' });
   }));
-
-  // ---------- 接口自学习同步 ----------
-  function syncOps() {
-    try {
-      const raw = sessionStorage.getItem(OPS_KEY);
-      if (!raw) return;
-      const ops = JSON.parse(raw);
-      if (ops && Object.keys(ops).length) send({ type: 'syncOps', ops });
-    } catch (e) { /* ignore */ }
-  }
 
   // ---------- 解析 handle ----------
   const RESERVED = new Set([
@@ -48,9 +37,8 @@
   }
 
   // ---------- 解析用户 ID ----------
-  // 首选：X 的关注按钮 data-testid 形如 "1234567-unfollow"，直接带用户 ID
-  // 次选：页面自身 GraphQL 响应里采集到的 handle -> id 映射
-  function findUserId(card, followBtn, handle) {
+  // X 的关注按钮 data-testid 形如 "1234567-unfollow"，本身就带用户 ID
+  function findUserId(card, followBtn) {
     const t = (followBtn && followBtn.getAttribute('data-testid')) || '';
     const m = t.match(/^(\d+)-(?:un)?follow$/);
     if (m) return m[1];
@@ -60,11 +48,6 @@
       const mm = (el.getAttribute('data-testid') || '').match(/^(\d+)-(?:un)?follow$/);
       if (mm) return mm[1];
     }
-
-    try {
-      const map = JSON.parse(sessionStorage.getItem('__xla_users__') || '{}');
-      if (handle && map[handle.toLowerCase()]) return map[handle.toLowerCase()];
-    } catch (e) { /* ignore */ }
     return null;
   }
 
@@ -93,12 +76,12 @@
     btn.title = '加入 List (@' + handle + ')';
     btn.innerHTML =
       '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>List</span>';
-    const userId = findUserId(card, followBtn, handle);
+    const userId = findUserId(card, followBtn);
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       // 点击时再取一次，提高命中率（页面数据可能刚到位）
-      togglePanel(btn, handle, findUserId(card, followBtn, handle) || userId);
+      togglePanel(btn, handle, findUserId(card, followBtn) || userId);
     });
 
     // 直接采样 Following 按钮的真实样式，做到与 X 原生一致
@@ -162,7 +145,6 @@
     if (panel && panelOwnerBtn === btn) { closePanel(); return; }
     closePanel();
     panelOwnerBtn = btn;
-    syncOps(); // 打开菜单前顺带同步一次学到的接口
 
     panel = document.createElement('div');
     panel.className = 'xla-panel ' + (isDarkMode() ? 'xla-dark' : 'xla-light');
